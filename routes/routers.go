@@ -12,6 +12,7 @@ func SetUpRoutes(r *gin.Engine){
 	r.GET("/users/:id", services.HandlerGetUserById)
 	r.GET("/users", services.HandlerReadAllUsers)
     r.POST("/users",services.HandlerAddUser)
+    r.DELETE("/users/:id",services.DeleteUserById)
 
 	// Si ninguna ruta coincide se usan las de fastapi
 	r.NoRoute(services.HandlerFastapi)
