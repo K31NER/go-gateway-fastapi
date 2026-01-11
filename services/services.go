@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	users []schemas.Users
+	users = make(map[int]schemas.Users)
     mu sync.Mutex
 )
 
@@ -45,19 +45,25 @@ func HandlerReadAllUsers(ctx *gin.Context){
 func HandlerGetUserById(ctx *gin.Context){
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
+
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID invalido, debe ser entero"})
 		return
 	}
+    
+	// Buscamos el usuario
+	mu.Lock()
+	user, exists := users[id]
+    mu.Unlock()
 
-	for _, user := range users {
-		if user.Id == id {
-			ctx.JSON(http.StatusOK, user)
-			return
-		}
+	if !exists{
+        ctx.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
+		return
 	}
 
-	ctx.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
+	ctx.JSON(http.StatusOK,gin.H{
+		"user":user,
+	})
 }
 
 // Agrega nuevo usuario
@@ -84,16 +90,43 @@ func HandlerAddUser(ctx *gin.Context){
 	newUser.AddId() // Llamamos a tu método para asignar ID
 
     mu.Lock() // Bloqueamos la variable users
-	users = append(users, newUser)
+	users[newUser.Id] = newUser
 	mu.Unlock() // Desbloqueamos
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message":"Usuario creado con exito",
-		"users":users,
+		"users":newUser,
 	})
 }
 
+// elimina usuario
+func DeleteUserById(ctx *gin.Context){
+	idParam := ctx.Param("id")
+	id, err := strconv.Atoi(idParam)
 
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID invalido, debe ser entero"})
+		return
+	}
+    
+	// eliminamos
+	mu.Lock()
+	_,exists := users[id]
+	if exists{
+		delete(users, id)
+	}
+	mu.Unlock()
+
+	// Validamos si existe
+	if !exists{
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
+		return
+	}
+    
+	ctx.JSON(http.StatusOK,gin.H{
+		"message":"Usuario eliminado con exito",
+	})
+}
 
 
 
