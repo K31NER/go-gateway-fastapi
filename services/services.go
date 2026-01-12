@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/K31NER/go-gateway-fastapi/middleware"
 	"github.com/K31NER/go-gateway-fastapi/schemas"
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +23,8 @@ func HandlerFastapi(ctx *gin.Context){
 
 	// Definimos el proxy inverso
 	proxy := httputil.NewSingleHostReverseProxy(target)
-	proxy.ServeHTTP(ctx.Writer, ctx.Request)
+	fastapi := middleware.MiddlewareFastapi(proxy)
+	fastapi.ServeHTTP(ctx.Writer, ctx.Request)
 }
 
 func HandlerHealth(ctx *gin.Context){
