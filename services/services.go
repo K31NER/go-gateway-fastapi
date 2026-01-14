@@ -89,9 +89,8 @@ func HandlerAddUser(ctx *gin.Context){
 	}
 
 	// Registramos el nuevo usuario
-	newUser.AddId() // Llamamos a tu método para asignar ID
-
-    mu.Lock() // Bloqueamos la variable users
+    mu.Lock() // Bloqueamos para asegurar que la generación de ID e inserción sean atómicas
+	newUser.AddId() 
 	users[newUser.Id] = newUser
 	mu.Unlock() // Desbloqueamos
 
@@ -127,6 +126,47 @@ func DeleteUserById(ctx *gin.Context){
     
 	ctx.JSON(http.StatusOK,gin.H{
 		"message":"Usuario eliminado con exito",
+	})
+}
+
+// Actualiza el perfil de usuario
+func UpdateHandler(ctx *gin.Context) {
+	idParam := ctx.Param("id")
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID invalido, debe ser entero"})
+		return
+	}
+
+	// Buscamos si existe el usuario
+	mu.Lock()
+	_, exists := users[id]
+	mu.Unlock()
+
+	if !exists {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
+		return
+	}
+
+	var updatedUser schemas.Users
+	// Decodificamos el JSON enviado en la solicitud
+	if err := ctx.BindJSON(&updatedUser); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error al decodificar json"})
+		return
+	}
+
+	// Aseguramos que el ID se mantenga igual
+	updatedUser.Id = id
+
+	// Actualizamos el usuario en el mapa
+	mu.Lock()
+	users[id] = updatedUser
+	mu.Unlock()
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Usuario actualizado con exito",
+		"user":    updatedUser,
 	})
 }
 
