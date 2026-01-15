@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strconv"
 	"sync"
 
@@ -19,7 +20,11 @@ var (
 
 // Definimos el servidor de fastapi
 func HandlerFastapi(ctx *gin.Context){
-	target,_ := url.Parse("http://localhost:8000")
+	fastapiURL := os.Getenv("FASTAPI_URL")
+	if fastapiURL == "" {
+		fastapiURL = "http://localhost:8000"
+	}
+	target,_ := url.Parse(fastapiURL)
 
 	// Definimos el proxy inverso
 	proxy := httputil.NewSingleHostReverseProxy(target)
