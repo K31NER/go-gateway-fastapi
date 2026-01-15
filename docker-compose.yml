@@ -1,0 +1,61 @@
+services:
+  # Base de datos Redis para Celery
+  redis:
+    image: redis:alpine
+    container_name: redis_db
+    ports:
+      - "6379:6379"
+    networks:
+      - internal
+
+  # API de Python (FastAPI)
+  api:
+    build:
+      context: ./API
+      dockerfile: Dockerfile
+    container_name: fastapi_ml
+    environment:
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - internal
+
+  # Worker de Celery para manejo de colas
+  worker:
+    build:
+      context: ./API
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    command: celery -A config.celery_config.celery_app worker --loglevel=info
+    environment:
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+      - C_FORCE_ROOT=true
+    depends_on:
+      - redis
+      - api
+    networks:
+      - internal
+
+  # Gateway de Go
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - FASTAPI_URL=http://api:8000
+    depends_on:
+      - api
+    expose:
+      - 8080
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
