@@ -4,7 +4,6 @@ from config.celery_config import celery_app
 from repository.data_repository import DataRepository
 from infrastructure.ml.predict_score import ScoreSalaryModel
 
-
 # Instancia del modelo (Infrastructure)
 model = ScoreSalaryModel()
 

@@ -1,4 +1,4 @@
-from domain.data import Data, Task
+from domain.data import Data
 from repository.data_repository import DataRepository
 
 class UseModel:

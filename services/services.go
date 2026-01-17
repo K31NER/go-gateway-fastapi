@@ -15,15 +15,21 @@ import (
 
 var (
 	users = make(map[int]schemas.Users)
-    mu sync.Mutex
+	mu    sync.Mutex
 )
 
 // Definimos el servidor de fastapi
-func HandlerFastapi(ctx *gin.Context){
+func HandlerFastapi(ctx *gin.Context) {
 	fastapiURL := os.Getenv("FASTAPI_URL")
+
+	// Validamos que se haya definido el servidor
 	if fastapiURL == "" {
-		fastapiURL = "http://localhost:8000"
+		ctx.JSON(http.StatusBadGateway,gin.H{
+			"erros":"El servidor de fastapi no se encuentra disponible",
+		})
+		return
 	}
+
 	target,_ := url.Parse(fastapiURL)
 
 	// Definimos el proxy inverso
