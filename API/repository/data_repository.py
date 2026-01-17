@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class DataRepository(ABC):
     
     @abstractmethod
-    def get_predict(self, data: Data) -> dict[str] | None:
+    def get_predict(self, data: Data) -> str | None:
         pass
     
     @abstractmethod
